@@ -19,22 +19,28 @@ public class CpuController {
 
     @GetMapping("/v1/stat")
     public ResponseEntity<Map<String, String>> getCpuStat(){
-        var result = new HashMap<String, String>();
         try (var reader = new BufferedReader(new FileReader(PROC_STAT))) {
-            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                if (!line.startsWith("cpu")) {
-                    break;
-                }
-                String[] tokens = line.split("\\s+", 2);
-                if (tokens.length >= 2) {
-                    result.put(tokens[0], tokens[1]);
-                }
-            }
+            var cpuStat = getCpuStat(reader);
+            return ResponseEntity.ok(cpuStat);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // 로그 처리 필요
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body(Map.of("error", "Error reading CPU stats: " + e.getMessage()));
         }
-        return ResponseEntity.ok(result);
+    }
+
+    private Map<String, String> getCpuStat(BufferedReader reader) throws IOException {
+        var cpuStat = new HashMap<String, String>();
+        for (String line = reader.readLine(); startWith(line, "cpu"); line = reader.readLine()) {
+            String[] tokens = line.split("\\s+", 2);
+            if (tokens.length >= 2) {
+                cpuStat.put(tokens[0], tokens[1]);
+            }
+        }
+        return cpuStat;
+    }
+
+    private boolean startWith(String line, String word) {
+        return line != null && line.startsWith(word);
     }
 }
