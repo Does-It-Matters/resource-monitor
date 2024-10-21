@@ -20,6 +20,9 @@ public class CpuController {
         var result = new StringBuilder();
         try (var reader = new BufferedReader(new FileReader(PROC_STAT))) {
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                if (!line.startsWith("cpu")) {
+                    break;
+                }
                 result.append(line);
             }
         } catch (IOException e) {
